@@ -2,14 +2,14 @@
 
 ### Details
 A simple binary convolutional neural network built using TensorFlow.
-The CNN is comprised of 5 convolution, 5 pooling and 2 dense, layers.
+The CNN comprises 5 convolution, 5 pooling and 2 dense, layers.
 The main application will attempt to download two classes of images,
-horses and hunams, roughly 500 of each - this may take a few minutes.
+horses and humans, roughly 500 of each - this may take a few minutes.
 The application will then create, compile, train and save the model.
 Note, that the entire model i.e. architecture, weights and optimizer
 etc., are saved. 
 
-Should you wish to experiment with the model i.e make changes to the
+Should you wish to experiment with the model i.e. make changes to the
 src/binary_classifier create_model() function. Remember to update the
 value for SAVED_MODEL_NAME property in main.py file. Otherwise, the 
 application will load and use the previously saved model.
