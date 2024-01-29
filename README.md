@@ -37,7 +37,6 @@ Obviously, they should be either pictures of a horse or a human.
 ```bash
 > python main.py
 ```
-___
 
 ### Exit virtual environment 
 
@@ -47,13 +46,14 @@ ___
 ___
 
 
-### Optional 
-##### Build and tag a Docker image
+## Optional
+
+### Build and tag a Docker image
 ```bash
 docker build -t <your_tag_name>/binary_cnn_classifier .
 ```
 
-### Start Docker container.
+### Start Docker container
 ```bash
 docker run --name <your_container_name> <your_tag_name>/binary_cnn_classifier
 ```
