@@ -9,8 +9,8 @@ import src.binary_classifier as bc
     ______________________________________________________________________________________________
                 Binary Classifier
     ----------------------------------------------------------------------------------------------
-    This application downloads two classes of images, humans and horse, approx 500 of each.
-    The images are use to train a Convolutional Neural Network which will then attempt to
+    This application downloads two classes of images, humans and horses, approx 500 of each.
+    The images are used to train a Convolutional Neural Network which will then attempt to
     classify previously unseen image as either human or horse.
     ______________________________________________________________________________________________
 """
