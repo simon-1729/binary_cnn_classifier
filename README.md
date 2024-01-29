@@ -44,4 +44,17 @@ ___
 ```bash
 > deactivate
 ```
+___
+
+
+### Optional 
+##### Build and tag a Docker image
+```bash
+docker build -t <your_tag_name>/binary_cnn_classifier .
+```
+
+### Start Docker container.
+```bash
+docker run --name <your_container_name> <your_tag_name>/binary_cnn_classifier
+```
 
