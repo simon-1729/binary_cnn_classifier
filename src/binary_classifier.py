@@ -9,17 +9,23 @@ import numpy as np
 import wget
 from keras.preprocessing.image import ImageDataGenerator
 
+#  Training Parameters
+NUM_EPOCHS = 15
+NUM_BATCHES = 8
+LEARNING_RATE = 0.001
+CALLBACK_MIN_ACCURACY = 0.99
 
-# Download 'training data' zip and extract to directory.
+
+# Download data as zip and extract to directory.
 def dwnld_to_dir(url, data_root_dir):
     file_name = url.split('/')[-1]
     dir_name = file_name.split('.')[0]
-    img_root_dir = data_root_dir + '/' + dir_name
+    img_root_dir = data_root_dir + dir_name
     try:
         dwn_load = wget.download(url, out=data_root_dir)
         print(f"Downloaded: {dwn_load} file\n")
 
-        local_zip = data_root_dir + '/' + file_name
+        local_zip = data_root_dir + file_name
         zip_ref = zipfile.ZipFile(local_zip, 'r')
         zip_ref.extractall(img_root_dir)
         print(f"Extracted data to {img_root_dir}\n")
@@ -90,32 +96,51 @@ def create_model():
 
 
 # Compile model using RMSprop optimizer.
-def compile_model(the_model, learning_rate):
+def compile_model(the_model, learning_rate=LEARNING_RATE):
     the_model.compile(
         loss='binary_crossentropy',
         # RMSprop, automatically tunes the learning-rate.
         # (Note, non-legacy runs slow on M2 mac's).
-        optimizer=keras.optimizers.legacy.RMSprop(learning_rate=learning_rate),
+        optimizer=keras.optimizers.legacy.RMSprop(learning_rate),
         metrics=['accuracy']
     )
     return the_model
 
 
+class MyCallback(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        if logs.get('accuracy') > CALLBACK_MIN_ACCURACY:
+            print(f"\nTraining halted: Model exceeded minimum accuracy threshold of"
+                  f" {CALLBACK_MIN_ACCURACY*100}%")
+            self.model.stop_training = True
+
+
 # Train the model, using ImageDataGenerator to generate labels.
-def train_model(the_model, img_root_dir):
-    the_model.fit(
-        # ImageDataGenerator reads pictures in the source folders, converts them to float32 and
-        # feeds them (along with their binary generated labels; e.g. 0=horse and 1=human) to the model.
-        ImageDataGenerator(rescale=1 / 255)  # Normalise pixel [0, 1] range.
-        .flow_from_directory(
-            img_root_dir,
+def train_model(the_model, training_dir, validation_dir):
+    # ImageDataGenerator reads pictures from source folders and generates labels on
+    # the fly; e.g. 0=horse and 1=human.
+    training_data_gen = (ImageDataGenerator(rescale=1 / 255).flow_from_directory(
+            training_dir,
             target_size=(300, 300),  # All images will be resized to 300x300.
             batch_size=128,  # Images will be streamed in batches of 128.
             class_mode='binary'  # We use binary_crossentropy loss, thus binary labels.
-        ),
-        steps_per_epoch=8,  # Specifies how many batches will determine one epoch.
-        epochs=15,
-        verbose=1
+        ))
+    validation_data_gen = (ImageDataGenerator(rescale=1 / 255).flow_from_directory(
+            validation_dir,
+            target_size=(300, 300),
+            batch_size=32,
+            class_mode='binary'
+        ))
+
+    the_model.fit(
+        training_data_gen,
+        steps_per_epoch=NUM_BATCHES,  # Specifies how many batches will determine one epoch.
+        epochs=NUM_EPOCHS,
+        verbose=1,
+        callbacks=MyCallback(),
+        validation_data=validation_data_gen,
+        validation_steps=NUM_BATCHES
+
     )
     return the_model
 
@@ -137,7 +162,7 @@ def classify(the_model, img, class_desc: List):
     # Classify the image - feeding 10 pix at a time through to the network.
     classes = the_model.predict(img, batch_size=10)
 
-    # It's binary therefore, only one value in array.
+    # It's binary therefore, only one value in array, sigmoid -> [0, 1].
     if classes[0] > 0.5:
         return class_desc[1]
     else:
