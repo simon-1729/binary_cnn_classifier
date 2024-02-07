@@ -15,6 +15,10 @@ NUM_BATCHES = 8
 LEARNING_RATE = 0.001
 CALLBACK_MIN_ACCURACY = 0.99
 
+#  Image Metadata
+INPUT_SHAPE = (300, 300, 3)
+TARGET_SIZE = (300, 300)
+
 
 # Download data as zip and extract to directory.
 def dwnld_to_dir(url, data_root_dir):
@@ -77,7 +81,7 @@ def create_model():
         number of filters i.e. increasing the number of output channels for the next layer.
     """
     return keras.models.Sequential([
-        keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(300, 300, 3)),
+        keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=INPUT_SHAPE),
         keras.layers.MaxPooling2D(2, 2),
         keras.layers.Conv2D(32, (3, 3), activation='relu'),
         keras.layers.MaxPooling2D(2, 2),
@@ -115,22 +119,20 @@ class MyCallback(keras.callbacks.Callback):
             self.model.stop_training = True
 
 
-# Train the model, using ImageDataGenerator to generate labels.
+# ImageDataGenerator, streams images from source img_dir in batches of
+# batch_size generating labels on the fly; e.g. 0=horse and 1=human.
+def data_gen_helper(img_dir, batch_size):
+    return ImageDataGenerator(rescale=1 / 255).flow_from_directory(
+        img_dir,
+        target_size=TARGET_SIZE,  # All images will be resized to 300x300.
+        batch_size=batch_size,
+        class_mode='binary'  # Used binary_crossentropy loss in 'compile' => 'binary' labels.
+    )
+
+
 def train_model(the_model, training_dir, validation_dir):
-    # ImageDataGenerator reads pictures from source folders and generates labels on
-    # the fly; e.g. 0=horse and 1=human.
-    training_data_gen = (ImageDataGenerator(rescale=1 / 255).flow_from_directory(
-            training_dir,
-            target_size=(300, 300),  # All images will be resized to 300x300.
-            batch_size=128,  # Images will be streamed in batches of 128.
-            class_mode='binary'  # We use binary_crossentropy loss, thus binary labels.
-        ))
-    validation_data_gen = (ImageDataGenerator(rescale=1 / 255).flow_from_directory(
-            validation_dir,
-            target_size=(300, 300),
-            batch_size=32,
-            class_mode='binary'
-        ))
+    training_data_gen = data_gen_helper(training_dir, 128)
+    validation_data_gen = data_gen_helper(validation_dir, 32)
 
     the_model.fit(
         training_data_gen,
@@ -140,7 +142,6 @@ def train_model(the_model, training_dir, validation_dir):
         callbacks=MyCallback(),
         validation_data=validation_data_gen,
         validation_steps=NUM_BATCHES
-
     )
     return the_model
 
@@ -148,7 +149,7 @@ def train_model(the_model, training_dir, validation_dir):
 # Load, resize and normalise an image for classification.
 def format_img(img_path):
     # Load image into PIL format.
-    img = keras.utils.load_img(img_path, target_size=(300, 300))
+    img = keras.utils.load_img(img_path, target_size=TARGET_SIZE)
     # Converts from PIL to numpy array.
     img = keras.utils.img_to_array(img)
     # Normalise in range [0, 1].

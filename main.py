@@ -22,7 +22,7 @@ ROOT_DATA_DIR = './data/'
 TRAINING_DIR = ROOT_DATA_DIR + TRAINING_URL.split('/')[-1].split('.')[0]
 VALIDATION_DIR = ROOT_DATA_DIR + VALIDATION_URL.split('/')[-1].split('.')[0]
 SAVE_MODEL_DIR = './saved_models/'
-SAVED_MODEL_NAME = 'my_model_v2'
+SAVED_MODEL_NAME = 'my_model_v1'
 TEST_IMG_DIR = './data/imgs_to_classify'
 CLASS_DESC = ['horse', 'human']
 
